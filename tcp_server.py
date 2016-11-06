@@ -11,19 +11,19 @@ kill_service_value = False
 
 class tcp_server():
 
-    def __init__(self, port, connQueue, server_threads = 5):
-        self.server_socket = self.init_server_socket(port, connQueue)
-        self.pool = ThreadPoolExecutor(server_threads)
+	def __init__(self, port, connQueue, server_threads = 5):
+		self.server_socket = self.init_server_socket(port, connQueue)
+		self.pool = ThreadPoolExecutor(server_threads)
 
 
-    def serve(self):
+	def serve(self):
 		print("Server running")
 		running = True
 		kill_service_lock = threading.Lock()
 		while running:
 			#implementing non-blocking socket.accept() here - so server can check if KILL_SERVICE has
 			#been issued and can immediately, and gracefully, teardown
- 			try:
+			try:
 				client_socket, client_addr = self.server_socket.accept()      
 				print("servicing new connection")
 				self.pool.submit(
@@ -36,7 +36,7 @@ class tcp_server():
 			except IOError as e:  # and here it is handeled
 				if e.errno == errno.EWOULDBLOCK:
 					pass
-			
+
 			#checking if we should kill service as the result of a "KILL_SERVICE" command
 			if kill_service_lock.acquire(False):
 				if kill_service_value:
@@ -44,14 +44,12 @@ class tcp_server():
 					self.pool.shutdown()
 					print("KILLING SERVICE...")
 				kill_service_lock.release()
-			
+				
 
 		self.server_socket.close()
 		print("Server has been shut down")
 
-
-
-    def init_server_socket(self, port, connQueue):
+	def init_server_socket(self, port, connQueue):
 		"""
 		NOTE - this also sets the configuration settings dict 
 		for the server.
