@@ -1,0 +1,93 @@
+from concurrent.futures import ThreadPoolExecutor
+import errno
+import socket                                         
+import time
+import sys
+
+
+class tcp_server():
+
+    def __init__(self, port, connQueue, server_threads = 5):
+        self.server_socket = self.init_server_socket(port, connQueue)
+        self.pool = ThreadPoolExecutor(server_threads)
+
+
+    def serve(self):
+		print("Server running")
+		running = True
+		while running:
+
+			#implementing non-blocking accept here - so server can check if KILL_SERVICE has
+			#been issued and can immediately, and gracefully, teardown
+ 			try:
+				client_socket, client_addr = self.server_socket.accept()      
+				self.pool.submit(client_handler, client_socket, client_addr, self.server_info)
+				print("servicing new connection")
+			except IOError as e:  # and here it is handeled
+				if e.errno == errno.EWOULDBLOCK:
+					pass
+
+
+			#TODO - check some mutex variable for any problems - call shutdown on the pool when this happens too
+
+		print("Terminating Server")
+		self.server_socket.close()
+
+
+
+    def init_server_socket(self, port, connQueue):
+		"""
+		NOTE - this also sets the configuration settings dict 
+		for the server.
+		"""
+		#TODO set server socket to be non-blocking
+		server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
+		#TODO remove this hard coded host in production
+		server_host = "localhost" #socket.gethostname()                           
+		server_port = port
+		server_socket.bind((server_host, server_port))                                  
+		server_socket.listen(connQueue)                                           
+		server_socket.setblocking(0)
+
+		#configuration settings for server
+		self.server_info = {
+			"host": str(server_host),
+			"port": str(port),
+			"sid": "11315921"
+		}
+		return server_socket
+
+
+def client_handler(client_socket, client_addr, server_info):
+
+	running = True
+
+	while running:
+		client_msg = client_socket.recv(65536)
+
+		#start of command logic
+		#TODO better regex checking of commands here
+		if client_msg.startswith("HELO ", 0, 5):
+			response = "%s\nIP:[%s]\nPort:[%s]\nStudent ID:[%s]\n"%(
+				client_msg, 
+				server_info["host"], 
+				server_info["port"],
+				server_info["sid"]
+			)
+		elif client_msg == "KILL_SERVICE\n":
+			print("Killing Service")		
+			running = False
+		
+		client_socket.send(response)
+
+	client_socket.close()
+
+if __name__ == '__main__':
+    server = tcp_server(int(sys.argv[1]), 5, 2)
+    server.serve()
+
+
+
+
+
+
