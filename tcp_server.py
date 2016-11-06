@@ -3,7 +3,11 @@ import errno
 import socket                                         
 import time
 import sys
+import threading
 
+#GLOBAL VARIABLES
+#flag for whether or not to kill the main service
+kill_service_value = False
 
 class tcp_server():
 
@@ -15,23 +19,35 @@ class tcp_server():
     def serve(self):
 		print("Server running")
 		running = True
+		kill_service_lock = threading.Lock()
 		while running:
-
-			#implementing non-blocking accept here - so server can check if KILL_SERVICE has
+			#implementing non-blocking socket.accept() here - so server can check if KILL_SERVICE has
 			#been issued and can immediately, and gracefully, teardown
  			try:
 				client_socket, client_addr = self.server_socket.accept()      
-				self.pool.submit(client_handler, client_socket, client_addr, self.server_info)
 				print("servicing new connection")
+				self.pool.submit(
+					client_handler, 
+					client_socket, 
+					client_addr, 
+					self.server_info, 
+					kill_service_lock
+				)
 			except IOError as e:  # and here it is handeled
 				if e.errno == errno.EWOULDBLOCK:
 					pass
+			
+			#checking if we should kill service as the result of a "KILL_SERVICE" command
+			if kill_service_lock.acquire(False):
+				if kill_service_value:
+					running = False
+					self.pool.shutdown()
+					print("KILLING SERVICE...")
+				kill_service_lock.release()
+			
 
-
-			#TODO - check some mutex variable for any problems - call shutdown on the pool when this happens too
-
-		print("Terminating Server")
 		self.server_socket.close()
+		print("Server has been shut down")
 
 
 
@@ -58,13 +74,13 @@ class tcp_server():
 		return server_socket
 
 
-def client_handler(client_socket, client_addr, server_info):
+def client_handler(client_socket, client_addr, server_info, lock):
 
 	running = True
 
 	while running:
 		client_msg = client_socket.recv(65536)
-
+		response = ""
 		#start of command logic
 		#TODO better regex checking of commands here
 		if client_msg.startswith("HELO ", 0, 5):
@@ -75,9 +91,16 @@ def client_handler(client_socket, client_addr, server_info):
 				server_info["sid"]
 			)
 		elif client_msg == "KILL_SERVICE\n":
-			print("Killing Service")		
+			print("Kill Service Command!!!")		
+			lock.acquire()
+			global kill_service_value
+			kill_service_value = True
+			lock.release()	
 			running = False
-		
+		else:
+			response = "ERROR: unrecognised command\nGood day to you sir!"
+			running = False
+
 		client_socket.send(response)
 
 	client_socket.close()
