@@ -23,34 +23,36 @@ class tcp_server():
 
 	def serve(self):
 		"""
-		Main server loop. Runs while running is True. Checks kill_service_value 
-		to check if kill flag has been set, and terminates if it has
+		Main server loop. Runs while running is True. Checks 
+                kill_service_value to check if kill flag has been set, and 
+                terminates if it has
 		"""
 		print("Server running")
 		running = True
-		kill_service_lock = threading.Lock()	#kill_service_value thread lock
+                #kill_service_value thread lock
+		kill_service_lock = threading.Lock()
 		while running:
 			#non-blocking socket accept implementation
 			try:	#accept if there is a connection
 
-				client_socket, client_addr = self.server_socket.accept()      
+				csock, caddr = self.server_socket.accept() 
 
 				print("servicing new connection")
 
 				#launch new client handler thread
 				self.pool.submit(
 					client_handler, 
-					client_socket, 
-					client_addr, 
+					csock, 
+					caddr, 
 					self.server_info, 
 					kill_service_lock
 				)
 
-			except IOError as e:  #no connections would block, so sleep
+			except IOError as e:  #no connections would block, sleep
 				if e.errno == errno.EWOULDBLOCK:
 					time.sleep(0.05) 
 
-			#check for kill flag
+			#non-blocking check for kill flag
 			if kill_service_lock.acquire(False):
 				if kill_service_value:
 					running = False
@@ -58,7 +60,6 @@ class tcp_server():
 					print("KILLING SERVICE...")
 				kill_service_lock.release()
 				
-
 		self.server_socket.close()
 		print("Server has been shut down")
 
@@ -96,7 +97,7 @@ def client_handler(client_socket, client_addr, server_info, lock):
 	"""
 
 	running = True
-	respond = True		#used to signal whether a response should be sent
+	respond = True		#signals whether a response should be sent
 	while running:
 
 		client_msg = client_socket.recv(65536)

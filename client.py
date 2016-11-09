@@ -1,3 +1,6 @@
+"""
+NOTE - this client is simply for debugging purposes and is horrible
+"""
 import socket
 import sys
 import time
