@@ -33,9 +33,10 @@ class tcp_server():
 					self.server_info, 
 					kill_service_lock
 				)
-			except IOError as e:  # and here it is handeled
+			except IOError as e:  #if there are no pending connections, sleep 50ms
 				if e.errno == errno.EWOULDBLOCK:
-					pass
+                                    time.sleep(0.05) 
+				    pass
 
 			#checking if we should kill service as the result of a "KILL_SERVICE" command
 			if kill_service_lock.acquire(False):
@@ -54,7 +55,6 @@ class tcp_server():
 		NOTE - this also sets the configuration settings dict 
 		for the server.
 		"""
-		#TODO set server socket to be non-blocking
 		server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
 		#TODO remove this hard coded host in production
 		server_host = "localhost" #socket.gethostname()                           
@@ -80,7 +80,6 @@ def client_handler(client_socket, client_addr, server_info, lock):
 		client_msg = client_socket.recv(65536)
 		response = ""
 		#start of command logic
-		#TODO better regex checking of commands here
 		if client_msg.startswith("HELO ", 0, 5):
 			response = "%s\nIP:[%s]\nPort:[%s]\nStudent ID:[%s]\n"%(
 				client_msg, 
@@ -106,9 +105,3 @@ def client_handler(client_socket, client_addr, server_info, lock):
 if __name__ == '__main__':
     server = tcp_server(int(sys.argv[1]), 5, 2)
     server.serve()
-
-
-
-
-
-
