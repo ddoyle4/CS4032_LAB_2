@@ -10,5 +10,6 @@ In order to run the script, give it permission to execute with `sudo chmod u+x c
 `./compile.sh`
 
 ### Running
-The server can be run by running the *start.sh* script provided and including a port number for the server to bind to:
+The server can be run by giving the *start.sh* permission to execute with `sudo chmod u+x start.sh` and then running it with a port number for the server to bind to:
+
 `start.sh <port-number>`
