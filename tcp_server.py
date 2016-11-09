@@ -131,7 +131,7 @@ def process_helo_command(server_info, msg, client_addr):
 		server_info: dict containing information about the server
 		client_addr: address of the client connected
 	"""
-	response = "%sIP:%s\nPort:%s\nStudent ID:%s\n"%(
+	response = "%sIP:%s\nPort:%s\nStudentID:%s\n"%(
 		msg, 
 		server_info["host"], 
 		server_info["port"],
