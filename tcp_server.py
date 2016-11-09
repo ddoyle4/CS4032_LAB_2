@@ -79,7 +79,8 @@ class tcp_server():
 		server_socket.listen(connQueue)                                           
 		server_socket.setblocking(0)
                 
-                self.server_info["host"] = server_host
+                self.server_info["host"] = socket.gethostbyname(server_host)
+                print self.server_info["host"]
                 self.server_info["port"] = server_port
 		return server_socket
 
