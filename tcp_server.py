@@ -13,13 +13,13 @@ kill_service_value = False
 class tcp_server():
 
 	def __init__(self, port, connQueue, server_threads = 5):
+		#configuration settings for server
+                self.server_info = {}
+                self.server_info["sid"] = "11315921"
+
 		self.server_socket = self.init_server_socket(port, connQueue)
 		self.pool = ThreadPoolExecutor(server_threads)
 
-		#configuration settings for server
-		self.server_info = {
-			"sid": "11315921"
-		}
 
 	def serve(self):
 		"""
@@ -73,13 +73,14 @@ class tcp_server():
 		for the server.
 		"""
 		server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
-		#TODO remove this hard coded host in production
 		server_host = socket.gethostname()                           
 		server_port = port
 		server_socket.bind((server_host, server_port))                                  
 		server_socket.listen(connQueue)                                           
 		server_socket.setblocking(0)
-
+                
+                self.server_info["host"] = server_host
+                self.server_info["port"] = server_port
 		return server_socket
 
 
@@ -132,7 +133,7 @@ def process_helo_command(server_info, msg, client_addr):
 	response = "%sIP:%s\nPort:%s\nStudent ID:%s\n"%(
 		msg, 
 		server_info["host"], 
-		client_addr["port"],
+		server_info["port"],
 		server_info["sid"]
 	)
 	return response
