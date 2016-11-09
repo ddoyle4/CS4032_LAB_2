@@ -1,3 +1,7 @@
+"""
+Multithreaded TCP server
+David Doyle
+"""
 from concurrent.futures import ThreadPoolExecutor
 import errno
 import socket                                         
@@ -15,7 +19,7 @@ class tcp_server():
 	def __init__(self, port, connQueue, server_threads = 5):
 		#configuration settings for server
                 self.server_info = {}
-                self.server_info["sid"] = "11315921"
+                self.server_info["sid"] = "12345678"
 
 		self.server_socket = self.init_server_socket(port, connQueue)
 		self.pool = ThreadPoolExecutor(server_threads)
