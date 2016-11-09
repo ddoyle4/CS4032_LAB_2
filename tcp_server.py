@@ -74,7 +74,7 @@ class tcp_server():
 		"""
 		server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
 		#TODO remove this hard coded host in production
-		server_host = "localhost"#socket.gethostname()                           
+		server_host = socket.gethostname()                           
 		server_port = port
 		server_socket.bind((server_host, server_port))                                  
 		server_socket.listen(connQueue)                                           
@@ -129,10 +129,10 @@ def process_helo_command(server_info, msg, client_addr):
 		server_info: dict containing information about the server
 		client_addr: address of the client connected
 	"""
-	response = "%s\nIP:[%s]\nPort:[%s]\nStudent ID:[%s]\n"%(
+	response = "%sIP:%s\nPort:%s\nStudent ID:%s\n"%(
 		msg, 
-		client_addr[0], 
-		client_addr[1],
+		server_info["host"], 
+		client_addr["port"],
 		server_info["sid"]
 	)
 	return response
