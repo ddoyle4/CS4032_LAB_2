@@ -1,4 +1,4 @@
-##CS4032 - Lab 2 - David Doyle
+## CS4032 - Lab 2 - David Doyle
 
 This script requires both python 2.7 and pip to be installed on the machine running it.
 
